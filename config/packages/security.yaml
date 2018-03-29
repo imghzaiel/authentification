@@ -29,14 +29,16 @@ security:
                     success_handler:          lexik_jwt_authentication.handler.authentication_success
                     failure_handler:          lexik_jwt_authentication.handler.authentication_failure
                     require_previous_session: false
-        main:
-                logout:
-                    path:   /logout
-                anonymous: true
+                
         api:
                 pattern:   ^/api
                 stateless: true
                 provider: our_db_provider
+                anonymous: true
+                logout:
+                    path: /logout
+                    invalidate_session: true
+                    target: /
                 guard:
                     authenticators:
                         - lexik_jwt_authentication.jwt_token_authenticator

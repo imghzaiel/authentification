@@ -12,7 +12,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use FOS\RestBundle\View\View;
 use FOS\RestBundle\Controller\Annotations as FOSRest;
 use App\Entity\User;
-use App\Form\Type\UserFormType;
+use App\Form\Type\UserFormType as form;
 
 /**
  * Brand controller.
@@ -68,7 +68,7 @@ class UserController extends Controller
         if (!$user) {
             throw new HttpException(404, "user with the id $id not found");
         }
-        $view = View::create();
+       
         $form = $this->createForm(UserFormType::class, $user, array('method' => 'PUT'));
         try {
             $form->setData($user);
@@ -93,7 +93,7 @@ class UserController extends Controller
             throw new HttpException(500, $ex->getMessage());
         }
 
-        return View::create($user, Response::HTTP_CREATED , []);
+        return new Response(sprintf('User %s successfully modified', $user->getUsername()));
     }
     
     /**
@@ -113,20 +113,7 @@ class UserController extends Controller
             $em->flush();
             return new View(null, Response::HTTP_NO_CONTENT);
         }
-  /**
-     * Logout user
-     *
-     * @Route("/logout")
-     */
-    public function logoutAction() {
-        try {
-            $this->get("request")->getSession()->invalidate();
-            $this->get("security.context")->setToken(null);
-            return true;
-        } catch (\Exception $e) {
-            return false;
-        }
-    }
+  
     
    
     /**

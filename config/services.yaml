@@ -30,3 +30,14 @@ services:
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
    
+     # authentication failure event listener
+    acme.security.authentication_event_listener:
+        class: App\listener\AuthenticationListener
+        tags:
+            - { name: kernel.event_subscriber }
+ 
+    # authentication success event listener
+    acme.security.interactive_login_listener:
+        class: App\listener\AuthenticationListener
+        tags:
+            - { name: kernel.event_listener, event: security.interactive_login, method: onAuthenticationSuccess }

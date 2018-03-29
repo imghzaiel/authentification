@@ -19,17 +19,14 @@ use App\Form\Type\UserFormType as form;
  *
  * @Route("/")
  */
-class UserController extends Controller
-{
-    
-    
+class UserController extends Controller {
+
     /**
      * @Route("/user", name="user")
      * @Method({"POST"})
      */
-    public function postUserAction(Request $request)
-    {
-       $em=$this->getDoctrine()->getManager();
+    public function postUserAction(Request $request) {
+        $em = $this->getDoctrine()->getManager();
         $encoder = $this->container->get('security.password_encoder');
         $username = $request->request->get('_username');
         $password = $request->request->get('_password');
@@ -39,36 +36,34 @@ class UserController extends Controller
         $em->flush($user);
         return new Response(sprintf('User %s successfully created', $user->getUsername()));
     }
-    
-    
+
     /**
      * @FOSRest\Get("/users")
      *
      * @return array
      */
-    public function getUserAction()
-    {
+    public function getUserAction() {
         $repository = $this->getDoctrine()->getRepository(User::class);
-        
+
         // query for a single Product by its primary key (usually "id")
         $user = $repository->findall();
-        
-        return View::create($user, Response::HTTP_CREATED , []);
+
+        return View::create($user, Response::HTTP_CREATED, []);
     }
-    
+
     /**
      * @FOSRest\Put("/userid/{id}")
      *
-     * @return array
+     * @return View
      */
     public function putUserAction(Request $request, $id) {
 
-        $user = $this->getDoctrine()->getManager()->getRepository(User::class)->find($id);
+        $user = $this->getDoctrine()->getManager()->getRepository(User::class)->findOneById($id);
 
         if (!$user) {
             throw new HttpException(404, "user with the id $id not found");
         }
-       
+        $view = View::create();
         $form = $this->createForm(UserFormType::class, $user, array('method' => 'PUT'));
         try {
             $form->setData($user);
@@ -93,35 +88,49 @@ class UserController extends Controller
             throw new HttpException(500, $ex->getMessage());
         }
 
-        return new Response(sprintf('User %s successfully modified', $user->getUsername()));
+        return $this->get('fos_rest.view_handler')->handle($view);
     }
-    
+
     /**
      * @FOSRest\Delete("/delete/{id}")
      *
      * @return array
      */
-     public function deleteUserAction($id)
-        {
-            
-            $user = $this->getDoctrine()->getManager()->getRepository(User::class)->findOneById($id);
-            if ($user == null) {
-                return new View(null, Response::HTTP_NOT_FOUND);
-            }
-            $em = $this->getDoctrine()->getManager();
-            $em->remove($user);
-            $em->flush();
-            return new View(null, Response::HTTP_NO_CONTENT);
+    public function deleteUserAction($id) {
+
+        $user = $this->getDoctrine()->getManager()->getRepository(User::class)->findOneById($id);
+        if ($user == null) {
+            return new View(null, Response::HTTP_NOT_FOUND);
         }
-  
-    
-   
+        $em = $this->getDoctrine()->getManager();
+        $em->remove($user);
+        $em->flush();
+        return new View(null, Response::HTTP_NO_CONTENT);
+    }
+
+    /**
+     * @FOSRest\Get("/find/{id}")
+     *
+     * @return array
+     */
+    public function getUserIdAction($id) {
+        $data = $this->getDoctrine()->getManager()->getRepository(User::class)->findOneById($id);
+
+        if (!$data) {
+            throw new HttpException(404, "user with the id $id not found");
+        }
+        $view = View::create()
+                ->setStatusCode(200)
+                ->setData($data);
+
+        return $this->get('fos_rest.view_handler')->handle($view);
+    }
+
     /**
      * @Route("/api", name="api")
      */
-    public function apiAction()
-    {
+    public function apiAction() {
         return new Response(sprintf('Logged in as %s', $this->getUser()->getUsername()));
     }
-     
+
 }
